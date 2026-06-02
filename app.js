@@ -2,7 +2,8 @@
    상태(State) 관리
 =========================== */
 
-// Todo 항목 배열 (각 항목: { id, text, isDone })
+// Todo 항목 배열 (각 항목: { id, text, isDone, date })
+// date: 'YYYY-MM-DD' 형식의 문자열
 let todos = [];
 
 // 각 Todo를 고유하게 식별하기 위한 ID 카운터
@@ -10,6 +11,10 @@ let nextId = 1;
 
 // 현재 선택된 필터 ('all' | 'active' | 'done')
 let currentFilter = "all";
+
+// 현재 선택된 날짜 (Date 객체)
+// 페이지 로드 시 오늘 날짜로 초기화
+let currentDate = new Date();
 
 /* ===========================
    DOM 참조
@@ -24,19 +29,94 @@ const totalCount = document.getElementById("totalCount");
 const doneCount = document.getElementById("doneCount");
 const remainCount = document.getElementById("remainCount");
 const filterTabs = document.querySelectorAll(".filter-tab");
+const prevDateBtn = document.getElementById("prevDateBtn");
+const nextDateBtn = document.getElementById("nextDateBtn");
+const dateLabel = document.getElementById("dateLabel");
+const todayBadge = document.getElementById("todayBadge");
+
+/* ===========================
+   날짜 유틸리티
+=========================== */
+
+/**
+ * Date 객체를 'YYYY-MM-DD' 형식의 문자열로 변환한다.
+ * 로컬 시간 기준으로 변환하여 시간대 오류를 방지한다.
+ * @param {Date} date
+ * @returns {string} 'YYYY-MM-DD'
+ */
+function formatDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Date 객체를 화면에 표시할 형식으로 변환한다.
+ * ex) 2025년 6월 3일 (화)
+ * @param {Date} date
+ * @returns {string}
+ */
+function formatDateDisplay(date) {
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dow = days[date.getDay()];
+  return `${year}년 ${month}월 ${day}일 (${dow})`;
+}
+
+/**
+ * 주어진 Date가 오늘인지 여부를 반환한다.
+ * @param {Date} date
+ * @returns {boolean}
+ */
+function isToday(date) {
+  return formatDateKey(date) === formatDateKey(new Date());
+}
+
+/* ===========================
+   날짜 네비게이션
+=========================== */
+
+/**
+ * currentDate를 하루 전으로 이동하고 화면을 갱신한다.
+ */
+function goToPrevDate() {
+  currentDate.setDate(currentDate.getDate() - 1);
+  render();
+}
+
+/**
+ * currentDate를 하루 후로 이동하고 화면을 갱신한다.
+ */
+function goToNextDate() {
+  currentDate.setDate(currentDate.getDate() + 1);
+  render();
+}
+
+/**
+ * 날짜 표시 영역(label, 오늘 뱃지)을 현재 날짜에 맞게 업데이트한다.
+ */
+function updateDateDisplay() {
+  dateLabel.textContent = formatDateDisplay(currentDate);
+
+  // 오늘 뱃지는 오늘 날짜일 때만 표시
+  todayBadge.style.display = isToday(currentDate) ? "inline-block" : "none";
+}
 
 /* ===========================
    Todo 추가
 =========================== */
 
 /**
- * 입력창의 텍스트로 새 Todo를 생성하고 목록에 추가한다.
+ * 입력창의 텍스트로 새 Todo를 생성한다.
+ * 현재 선택된 날짜(currentDate)를 함께 저장한다.
  * 빈 값이면 에러 메시지를 표시하고 중단한다.
  */
 function addTodo() {
   const text = todoInput.value.trim();
 
-  // 빈 입력값 유효성 검사
   if (!text) {
     showError("할 일을 입력해주세요.");
     todoInput.classList.add("is-error");
@@ -44,14 +124,13 @@ function addTodo() {
     return;
   }
 
-  // 유효성 통과 → 에러 상태 초기화
   clearError();
 
-  // 새 Todo 객체 생성
   const newTodo = {
     id: nextId++,
     text,
     isDone: false,
+    date: formatDateKey(currentDate), // 현재 선택된 날짜를 'YYYY-MM-DD'로 저장
   };
 
   todos.push(newTodo);
@@ -94,7 +173,6 @@ function toggleDone(id) {
 
 /**
  * 해당 아이템을 수정 모드로 전환한다.
- * 텍스트 span을 input으로 교체하고 포커스를 준다.
  * @param {number} id - 수정할 Todo의 ID
  */
 function startEdit(id) {
@@ -104,10 +182,8 @@ function startEdit(id) {
   const listItem = document.querySelector(`[data-id="${id}"]`);
   if (!listItem) return;
 
-  // 수정 모드 CSS 클래스 적용
   listItem.classList.add("is-editing");
 
-  // 텍스트 span → input으로 교체
   const textSpan = listItem.querySelector(".todo-text");
   const editInput = document.createElement("input");
   editInput.type = "text";
@@ -117,22 +193,19 @@ function startEdit(id) {
   textSpan.replaceWith(editInput);
   editInput.focus();
 
-  // 수정 버튼 → 확인 버튼으로 교체
   const editBtn = listItem.querySelector(".edit-btn");
   editBtn.textContent = "✓";
   editBtn.title = "수정 완료";
   editBtn.onclick = () => confirmEdit(id);
 
-  // Enter 키로도 수정 완료 가능
   editInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") confirmEdit(id);
-    if (e.key === "Escape") render(); // ESC로 취소
+    if (e.key === "Escape") render();
   });
 }
 
 /**
  * 수정 모드를 종료하고 변경된 텍스트를 저장한다.
- * 빈 값이면 수정을 취소하고 원래 텍스트를 유지한다.
  * @param {number} id - 수정 완료할 Todo의 ID
  */
 function confirmEdit(id) {
@@ -142,13 +215,11 @@ function confirmEdit(id) {
   const editInput = listItem.querySelector(".todo-edit-input");
   const newText = editInput ? editInput.value.trim() : "";
 
-  // 빈 값이면 수정 취소
   if (!newText) {
     render();
     return;
   }
 
-  // 배열 내 해당 Todo 텍스트 갱신
   todos = todos.map((todo) =>
     todo.id === id ? { ...todo, text: newText } : todo,
   );
@@ -160,30 +231,28 @@ function confirmEdit(id) {
 =========================== */
 
 /**
- * 현재 필터 기준으로 todos 배열을 필터링하여 반환한다.
- * @returns {Array} 필터링된 Todo 배열
+ * 현재 날짜 + 현재 필터를 동시에 적용하여 표시할 Todo 배열을 반환한다.
+ * 날짜 필터링이 먼저 적용되고, 그 결과에 상태 필터가 적용된다.
+ * @returns {Array} 최종 표시할 Todo 배열
  */
 function getFilteredTodos() {
-  if (currentFilter === "active") {
-    // 진행 중: 완료되지 않은 항목만
-    return todos.filter((todo) => !todo.isDone);
-  }
-  if (currentFilter === "done") {
-    // 완료: 완료된 항목만
-    return todos.filter((todo) => todo.isDone);
-  }
-  // 전체: 모든 항목
-  return todos;
+  // 1단계: 선택된 날짜에 해당하는 Todo만 추출
+  const todayKey = formatDateKey(currentDate);
+  const byDate = todos.filter((todo) => todo.date === todayKey);
+
+  // 2단계: 상태 필터 적용
+  if (currentFilter === "active") return byDate.filter((todo) => !todo.isDone);
+  if (currentFilter === "done") return byDate.filter((todo) => todo.isDone);
+  return byDate;
 }
 
 /**
- * 필터 탭을 클릭했을 때 currentFilter를 변경하고 탭 스타일을 갱신한다.
- * @param {string} filter - 선택된 필터 값 ('all' | 'active' | 'done')
+ * 필터 탭 클릭 시 currentFilter를 변경하고 탭 스타일을 갱신한다.
+ * @param {string} filter - 'all' | 'active' | 'done'
  */
 function setFilter(filter) {
   currentFilter = filter;
 
-  // 모든 탭에서 is-active 제거 후 선택된 탭에만 적용
   filterTabs.forEach((tab) => {
     const isSelected = tab.dataset.filter === filter;
     tab.classList.toggle("is-active", isSelected);
@@ -197,17 +266,10 @@ function setFilter(filter) {
    에러 메시지 처리
 =========================== */
 
-/**
- * 에러 메시지를 표시한다.
- * @param {string} message - 표시할 에러 메시지
- */
 function showError(message) {
   errorMessage.textContent = message;
 }
 
-/**
- * 에러 메시지와 입력창 에러 상태를 초기화한다.
- */
 function clearError() {
   errorMessage.textContent = "";
   todoInput.classList.remove("is-error");
@@ -218,12 +280,14 @@ function clearError() {
 =========================== */
 
 /**
- * 전체 / 완료 / 남은 할 일 수를 계산하여 UI에 반영한다.
- * 통계는 필터와 무관하게 todos 전체 기준으로 계산한다.
+ * 통계는 현재 날짜 기준 전체 todos에서 계산한다.
+ * (상태 필터와 무관하게 선택된 날짜의 전체 항목 기준)
  */
 function updateStats() {
-  const total = todos.length;
-  const done = todos.filter((t) => t.isDone).length;
+  const todayKey = formatDateKey(currentDate);
+  const todayTodos = todos.filter((todo) => todo.date === todayKey);
+  const total = todayTodos.length;
+  const done = todayTodos.filter((t) => t.isDone).length;
   const remain = total - done;
 
   totalCount.innerHTML = `전체 <strong>${total}</strong>`;
@@ -232,13 +296,9 @@ function updateStats() {
 }
 
 /* ===========================
-   빈 상태 메시지 처리
+   빈 상태 메시지
 =========================== */
 
-/**
- * 현재 필터에 맞는 빈 상태 메시지를 반환한다.
- * @returns {string} 빈 상태 안내 메시지
- */
 function getEmptyMessage() {
   if (currentFilter === "active") return "진행 중인 할 일이 없어요";
   if (currentFilter === "done") return "완료된 할 일이 없어요";
@@ -251,8 +311,8 @@ function getEmptyMessage() {
 
 /**
  * Todo 객체를 받아 <li> 엘리먼트를 생성하여 반환한다.
- * @param {Object} todo - { id, text, isDone }
- * @returns {HTMLElement} 생성된 <li> 엘리먼트
+ * @param {Object} todo - { id, text, isDone, date }
+ * @returns {HTMLElement}
  */
 function createTodoElement(todo) {
   const li = document.createElement("li");
@@ -260,7 +320,6 @@ function createTodoElement(todo) {
   li.setAttribute("data-id", todo.id);
   li.setAttribute("role", "listitem");
 
-  // 완료 체크박스
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.className = "todo-checkbox";
@@ -268,21 +327,17 @@ function createTodoElement(todo) {
   checkbox.setAttribute("aria-label", "완료 처리");
   checkbox.addEventListener("change", () => toggleDone(todo.id));
 
-  // 텍스트 영역 래퍼
   const textWrapper = document.createElement("div");
   textWrapper.className = "todo-text-wrapper";
 
-  // 텍스트 span
   const textSpan = document.createElement("span");
   textSpan.className = "todo-text";
   textSpan.textContent = todo.text;
   textWrapper.appendChild(textSpan);
 
-  // 액션 버튼 영역
   const actions = document.createElement("div");
   actions.className = "todo-actions";
 
-  // 수정 버튼
   const editBtn = document.createElement("button");
   editBtn.className = "action-btn edit-btn";
   editBtn.textContent = "✎";
@@ -290,7 +345,6 @@ function createTodoElement(todo) {
   editBtn.setAttribute("aria-label", "수정");
   editBtn.addEventListener("click", () => startEdit(todo.id));
 
-  // 삭제 버튼
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "action-btn delete-btn";
   deleteBtn.textContent = "✕";
@@ -313,16 +367,19 @@ function createTodoElement(todo) {
 =========================== */
 
 /**
- * 현재 필터를 적용한 todos를 기반으로 화면 전체를 다시 그린다.
+ * 날짜 표시, 필터링된 목록, 통계를 모두 갱신한다.
  */
 function render() {
+  // 날짜 영역 갱신
+  updateDateDisplay();
+
   // 목록 초기화
   todoList.innerHTML = "";
 
-  // 현재 필터 기준으로 표시할 항목 추출
+  // 날짜 + 상태 필터 적용
   const filteredTodos = getFilteredTodos();
 
-  // 빈 상태 표시 여부 (필터 기준으로 판단)
+  // 빈 상태 처리
   if (filteredTodos.length === 0) {
     emptyState.style.display = "block";
     emptyMessage.textContent = getEmptyMessage();
@@ -330,13 +387,12 @@ function render() {
     emptyState.style.display = "none";
   }
 
-  // 필터링된 Todo 아이템 렌더링
+  // 목록 렌더링
   filteredTodos.forEach((todo) => {
-    const todoEl = createTodoElement(todo);
-    todoList.appendChild(todoEl);
+    todoList.appendChild(createTodoElement(todo));
   });
 
-  // 통계는 전체 todos 기준으로 갱신
+  // 통계 갱신 (현재 날짜 기준)
   updateStats();
 }
 
@@ -344,27 +400,26 @@ function render() {
    이벤트 바인딩
 =========================== */
 
-// 추가 버튼 클릭
 addBtn.addEventListener("click", addTodo);
 
-// Enter 키로 추가
 todoInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") addTodo();
 });
 
-// 입력 중 에러 상태 해제
 todoInput.addEventListener("input", () => {
   if (todoInput.value.trim()) clearError();
 });
 
-// 필터 탭 클릭
 filterTabs.forEach((tab) => {
   tab.addEventListener("click", () => setFilter(tab.dataset.filter));
 });
+
+// 날짜 이전 / 다음 버튼
+prevDateBtn.addEventListener("click", goToPrevDate);
+nextDateBtn.addEventListener("click", goToNextDate);
 
 /* ===========================
    초기화
 =========================== */
 
-// 페이지 로드 시 초기 렌더링
 render();
