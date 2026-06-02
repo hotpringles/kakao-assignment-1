@@ -9,6 +9,36 @@ let todos = [];
 // 각 Todo를 고유하게 식별하기 위한 ID 카운터
 let nextId = 1;
 
+/* ===========================
+   로컬스토리지 연동
+=========================== */
+
+// 로컬스토리지에서 사용할 키 이름
+const STORAGE_KEY_TODOS = "todos";
+const STORAGE_KEY_NEXTID = "nextId";
+
+/**
+ * 현재 todos 배열과 nextId를 로컬스토리지에 저장한다.
+ * JSON.stringify로 직렬화하여 문자열로 저장한다.
+ */
+function saveToStorage() {
+  localStorage.setItem(STORAGE_KEY_TODOS, JSON.stringify(todos));
+  localStorage.setItem(STORAGE_KEY_NEXTID, JSON.stringify(nextId));
+}
+
+/**
+ * 로컬스토리지에서 todos와 nextId를 불러와 상태를 복원한다.
+ * 저장된 데이터가 없으면 기본값(빈 배열, nextId=1)을 유지한다.
+ */
+function loadFromStorage() {
+  const savedTodos = localStorage.getItem(STORAGE_KEY_TODOS);
+  const savedNextId = localStorage.getItem(STORAGE_KEY_NEXTID);
+
+  // 저장된 값이 있을 때만 JSON.parse로 복원
+  if (savedTodos) todos = JSON.parse(savedTodos);
+  if (savedNextId) nextId = JSON.parse(savedNextId);
+}
+
 // 현재 선택된 필터 ('all' | 'active' | 'done')
 let currentFilter = "all";
 
@@ -136,6 +166,7 @@ function addTodo() {
   todos.push(newTodo);
   todoInput.value = "";
 
+  saveToStorage(); // 추가 후 저장
   render();
 }
 
@@ -149,6 +180,7 @@ function addTodo() {
  */
 function deleteTodo(id) {
   todos = todos.filter((todo) => todo.id !== id);
+  saveToStorage(); // 삭제 후 저장
   render();
 }
 
@@ -164,6 +196,7 @@ function toggleDone(id) {
   todos = todos.map((todo) =>
     todo.id === id ? { ...todo, isDone: !todo.isDone } : todo,
   );
+  saveToStorage(); // 완료 처리 후 저장
   render();
 }
 
@@ -223,6 +256,7 @@ function confirmEdit(id) {
   todos = todos.map((todo) =>
     todo.id === id ? { ...todo, text: newText } : todo,
   );
+  saveToStorage(); // 수정 후 저장
   render();
 }
 
@@ -422,4 +456,6 @@ nextDateBtn.addEventListener("click", goToNextDate);
    초기화
 =========================== */
 
+// 페이지 로드 시 로컬스토리지에서 데이터 복원 후 렌더링
+loadFromStorage();
 render();
