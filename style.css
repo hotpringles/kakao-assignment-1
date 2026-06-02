@@ -1,0 +1,381 @@
+/* ===========================
+   CSS 변수 & 전역 설정
+=========================== */
+:root {
+  --color-primary: #672be0;
+  --color-primary-light: #ede6fb;
+  --color-primary-dark: #4e1faa;
+  --color-bg: #f7f5fc;
+  --color-surface: #ffffff;
+  --color-text: #1a1523;
+  --color-text-muted: #7a6f8a;
+  --color-border: #e4ddf4;
+  --color-error: #d63b3b;
+  --color-done-text: #b0a8c4;
+  --color-done-bg: #f5f3fa;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-card: 0 2px 12px rgba(103, 43, 224, 0.07);
+  --transition: 0.18s ease;
+}
+
+/* 전역 리셋 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px 80px;
+}
+
+/* ===========================
+   앱 컨테이너
+=========================== */
+.app-container {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ===========================
+   헤더
+=========================== */
+.app-header {
+  margin-bottom: 28px;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+}
+
+.app-subtitle {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+/* ===========================
+   입력 영역
+=========================== */
+.input-section {
+  margin-bottom: 20px;
+}
+
+.input-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.todo-input {
+  flex: 1;
+  height: 48px;
+  padding: 0 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: 15px;
+  color: var(--color-text);
+  outline: none;
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.todo-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* 포커스 시 보라색 강조 */
+.todo-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(103, 43, 224, 0.12);
+}
+
+/* 에러 상태 입력창 */
+.todo-input.is-error {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(214, 59, 59, 0.1);
+}
+
+.add-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 400;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition),
+    transform var(--transition);
+}
+
+.add-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+.add-btn:active {
+  transform: scale(0.95);
+}
+
+/* 유효성 오류 메시지 */
+.error-message {
+  margin-top: 8px;
+  margin-left: 2px;
+  font-size: 13px;
+  color: var(--color-error);
+  min-height: 18px; /* 메시지 없을 때도 레이아웃 유지 */
+  transition: opacity var(--transition);
+}
+
+/* ===========================
+   통계 영역
+=========================== */
+.stats-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.stat-item strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.stat-divider {
+  color: var(--color-border);
+}
+
+/* ===========================
+   Todo 목록
+=========================== */
+.todo-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===========================
+   Todo 아이템
+=========================== */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+  animation: slideIn 0.2s ease;
+}
+
+/* 아이템 추가 애니메이션 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.todo-item:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+/* 완료 상태 아이템 */
+.todo-item.is-done {
+  background: var(--color-done-bg);
+  border-color: var(--color-border);
+}
+
+.todo-item.is-done:hover {
+  border-color: var(--color-border);
+  transform: none;
+}
+
+/* 완료 체크박스 */
+.todo-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+  position: relative;
+}
+
+/* 체크박스 선택 시 */
+.todo-checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* 체크 아이콘 (CSS로 그리기) */
+.todo-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 6px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Todo 텍스트 영역 */
+.todo-text-wrapper {
+  flex: 1;
+  min-width: 0; /* flex overflow 방지 */
+}
+
+/* 읽기 상태 텍스트 */
+.todo-text {
+  font-size: 15px;
+  line-height: 1.4;
+  word-break: break-all;
+  transition:
+    color var(--transition),
+    text-decoration var(--transition);
+}
+
+/* 완료된 텍스트 스타일 */
+.todo-item.is-done .todo-text {
+  text-decoration: line-through;
+  color: var(--color-done-text);
+}
+
+/* 수정 상태 입력창 */
+.todo-edit-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1.5px solid var(--color-primary);
+  background: transparent;
+  font-size: 15px;
+  color: var(--color-text);
+  outline: none;
+  padding: 2px 0;
+}
+
+/* ===========================
+   아이템 액션 버튼
+=========================== */
+.todo-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0; /* 기본 숨김 */
+  transition: opacity var(--transition);
+}
+
+/* 아이템 호버 시 버튼 표시 */
+.todo-item:hover .todo-actions {
+  opacity: 1;
+}
+
+/* 수정 모드일 때 항상 표시 */
+.todo-item.is-editing .todo-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition),
+    color var(--transition);
+  color: var(--color-text-muted);
+}
+
+.action-btn:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* 삭제 버튼 호버 */
+.action-btn.delete-btn:hover {
+  background: #fde8e8;
+  color: var(--color-error);
+}
+
+/* ===========================
+   빈 상태 메시지
+=========================== */
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  display: none; /* JS로 제어 */
+}
+
+.empty-state .empty-hint {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-border);
+}
+
+/* ===========================
+   반응형
+=========================== */
+@media (max-width: 480px) {
+  body {
+    padding: 28px 12px 60px;
+  }
+
+  .app-title {
+    font-size: 22px;
+  }
+
+  .todo-actions {
+    opacity: 1; /* 모바일에서 항상 표시 */
+  }
+}
