@@ -14,22 +14,49 @@
         <p class="app-subtitle">오늘 할 일을 정리해보세요</p>
       </header>
 
-      <!-- 일간 날짜 네비게이터 -->
-      <section class="date-nav" aria-label="날짜 이동">
-        <button id="prevDateBtn" class="date-nav-btn" aria-label="이전 날짜">
-          &#8249;
-        </button>
-        <div class="date-display">
-          <span id="dateLabel" class="date-label"></span>
-          <span id="todayBadge" class="today-badge">오늘</span>
+      <!-- 주간 뷰 -->
+      <section class="week-view" aria-label="주간 캘린더">
+        <div class="week-nav">
+          <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 주">
+            &#8249;
+          </button>
+          <span id="weekRangeLabel" class="week-range-label"></span>
+          <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 주">
+            &#8250;
+          </button>
         </div>
-        <button id="nextDateBtn" class="date-nav-btn" aria-label="다음 날짜">
-          &#8250;
-        </button>
+        <div
+          id="weekDays"
+          class="week-days"
+          role="list"
+          aria-label="요일 목록"
+        ></div>
       </section>
 
       <!-- Todo 입력 영역 -->
       <section class="input-section">
+        <!-- 날짜 네비게이터 (입력창 위 인라인) -->
+        <div class="date-nav-inline" aria-label="날짜 이동">
+          <button
+            id="prevDateBtn"
+            class="date-nav-inline-btn"
+            aria-label="이전 날짜"
+          >
+            &#8249;
+          </button>
+          <div class="date-display-inline">
+            <span id="dateLabel" class="date-label-inline"></span>
+            <span id="todayBadge" class="today-badge-inline">오늘</span>
+          </div>
+          <button
+            id="nextDateBtn"
+            class="date-nav-inline-btn"
+            aria-label="다음 날짜"
+          >
+            &#8250;
+          </button>
+        </div>
+
         <div class="input-wrapper">
           <input
             type="text"
@@ -41,7 +68,6 @@
           />
           <button id="addBtn" class="add-btn" aria-label="할 일 추가">+</button>
         </div>
-        <!-- 유효성 검사 안내 메시지 -->
         <p
           id="errorMessage"
           class="error-message"

@@ -20,7 +20,6 @@
   --transition: 0.18s ease;
 }
 
-/* 전역 리셋 */
 *,
 *::before,
 *::after {
@@ -63,33 +62,38 @@ body {
 
 .app-subtitle {
   margin-top: 4px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text-muted);
 }
 
 /* ===========================
-   날짜 네비게이터
+   주간 뷰
 =========================== */
-.date-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.week-view {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 12px 8px;
-  margin-bottom: 20px;
+  padding: 14px 12px;
+  margin-bottom: 12px;
   box-shadow: var(--shadow-card);
 }
 
-.date-nav-btn {
-  width: 36px;
-  height: 36px;
+/* 주간 네비게이션 (이전/다음 주 버튼 + 날짜 범위) */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.week-nav-btn {
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-muted);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -100,45 +104,197 @@ body {
     color var(--transition);
 }
 
-.date-nav-btn:hover {
+.week-nav-btn:hover {
   background: var(--color-primary-light);
   color: var(--color-primary);
 }
 
-.date-nav-btn:active {
-  transform: scale(0.93);
+.week-range-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
-/* 날짜 표시 영역 */
-.date-display {
+/* 7개 요일 셀 컨테이너 */
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+/* 각 요일 셀 */
+.week-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+  border: 1.5px solid transparent;
+}
+
+.week-day-cell:hover {
+  background: var(--color-primary-light);
+}
+
+/* 요일 이름 (월, 화, ...) */
+.week-day-name {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* 날짜 숫자 */
+.week-day-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  border-radius: 50%;
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
-.date-label {
-  font-size: 16px;
+/* 해당 날짜의 Todo 개수 뱃지 */
+.week-day-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-height: 14px; /* Todo 없을 때도 높이 유지 */
+}
+
+.week-day-count.has-todos {
+  color: var(--color-primary);
+}
+
+/* 요일명 + 오늘 뱃지를 가로로 묶는 래퍼 */
+.week-day-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* 주간 뷰 오늘 뱃지 (요일 옆에 표시) */
+.week-today-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+/* 오늘 날짜 스타일 - 요일명 강조만 */
+.week-day-cell.is-today .week-day-name {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* 선택된 날짜 스타일 - 보라색 배경 + 흰 글씨 */
+.week-day-cell.is-selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.week-day-cell.is-selected .week-day-name {
+  color: #fff;
+}
+
+/* 선택된 날짜 숫자: 흰 원 배경 + 보라 글씨 */
+.week-day-cell.is-selected .week-day-number {
+  background: #fff;
+  color: var(--color-primary);
+}
+
+.week-day-cell.is-selected .week-today-badge {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.week-day-cell.is-selected .week-day-count {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.week-day-cell.is-selected .week-day-count.has-todos {
+  color: #fff;
+}
+
+.week-day-cell.is-selected:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+/* 일요일 빨간색 (선택 상태가 아닐 때만) */
+.week-day-cell.is-sunday:not(.is-selected) .week-day-name,
+.week-day-cell.is-sunday:not(.is-selected) .week-day-number {
+  color: #d63b3b;
+}
+
+.week-day-cell.is-sunday:not(.is-selected) .week-today-badge {
+  color: #d63b3b;
+}
+
+/* ===========================
+   일간 날짜 네비게이터 (입력창 위 인라인)
+=========================== */
+.date-nav-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.date-nav-inline-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+
+/* hover 시 회색 배경으로만 구분 */
+.date-nav-inline-btn:hover {
+  background: #e9e9e9;
+}
+
+.date-display-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-label-inline {
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
   letter-spacing: -0.3px;
 }
 
-/* 오늘 뱃지 */
-.today-badge {
+.today-badge-inline {
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: 20px;
   background: var(--color-primary);
   color: #fff;
-  /* 오늘이 아닌 날에는 JS로 숨김 처리 */
 }
 
 /* ===========================
    입력 영역
 =========================== */
 .input-section {
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .input-wrapper {
@@ -184,7 +340,6 @@ body {
   background: var(--color-primary);
   color: #fff;
   font-size: 24px;
-  font-weight: 400;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
@@ -198,7 +353,6 @@ body {
 .add-btn:hover {
   background: var(--color-primary-dark);
 }
-
 .add-btn:active {
   transform: scale(0.95);
 }
@@ -206,10 +360,9 @@ body {
 .error-message {
   margin-top: 8px;
   margin-left: 2px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-error);
   min-height: 18px;
-  transition: opacity var(--transition);
 }
 
 /* ===========================
@@ -227,11 +380,11 @@ body {
 
 .filter-tab {
   flex: 1;
-  height: 36px;
+  height: 38px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -253,7 +406,6 @@ body {
 
 .filter-tab.is-active:hover {
   background: var(--color-primary-dark);
-  color: #fff;
 }
 
 /* ===========================
@@ -264,7 +416,7 @@ body {
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-muted);
 }
 
@@ -407,10 +559,7 @@ body {
   transition: opacity var(--transition);
 }
 
-.todo-item:hover .todo-actions {
-  opacity: 1;
-}
-
+.todo-item:hover .todo-actions,
 .todo-item.is-editing .todo-actions {
   opacity: 1;
 }
@@ -466,16 +615,21 @@ body {
   body {
     padding: 28px 12px 60px;
   }
-
   .app-title {
     font-size: 22px;
   }
-
   .todo-actions {
     opacity: 1;
   }
-
   .date-label {
     font-size: 14px;
+  }
+  .week-day-number {
+    font-size: 13px;
+    width: 24px;
+    height: 24px;
+  }
+  .week-day-name {
+    font-size: 10px;
   }
 }
