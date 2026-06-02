@@ -144,8 +144,53 @@ body {
   margin-left: 2px;
   font-size: 13px;
   color: var(--color-error);
-  min-height: 18px; /* 메시지 없을 때도 레이아웃 유지 */
+  min-height: 18px;
   transition: opacity var(--transition);
+}
+
+/* ===========================
+   필터 탭
+=========================== */
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+}
+
+.filter-tab {
+  flex: 1;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.filter-tab:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* 선택된 탭 스타일 */
+.filter-tab.is-active {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.filter-tab.is-active:hover {
+  background: var(--color-primary-dark);
+  color: #fff;
 }
 
 /* ===========================
@@ -266,7 +311,7 @@ body {
 /* Todo 텍스트 영역 */
 .todo-text-wrapper {
   flex: 1;
-  min-width: 0; /* flex overflow 방지 */
+  min-width: 0;
 }
 
 /* 읽기 상태 텍스트 */
@@ -304,16 +349,14 @@ body {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
-  opacity: 0; /* 기본 숨김 */
+  opacity: 0;
   transition: opacity var(--transition);
 }
 
-/* 아이템 호버 시 버튼 표시 */
 .todo-item:hover .todo-actions {
   opacity: 1;
 }
 
-/* 수정 모드일 때 항상 표시 */
 .todo-item.is-editing .todo-actions {
   opacity: 1;
 }
@@ -340,7 +383,6 @@ body {
   color: var(--color-primary);
 }
 
-/* 삭제 버튼 호버 */
 .action-btn.delete-btn:hover {
   background: #fde8e8;
   color: var(--color-error);
@@ -354,7 +396,7 @@ body {
   padding: 48px 0;
   color: var(--color-text-muted);
   font-size: 15px;
-  display: none; /* JS로 제어 */
+  display: none;
 }
 
 .empty-state .empty-hint {
@@ -376,6 +418,6 @@ body {
   }
 
   .todo-actions {
-    opacity: 1; /* 모바일에서 항상 표시 */
+    opacity: 1;
   }
 }

@@ -36,6 +36,34 @@
         ></p>
       </section>
 
+      <!-- 필터 탭 -->
+      <nav class="filter-tabs" role="tablist" aria-label="할 일 필터">
+        <button
+          class="filter-tab is-active"
+          data-filter="all"
+          role="tab"
+          aria-selected="true"
+        >
+          전체
+        </button>
+        <button
+          class="filter-tab"
+          data-filter="active"
+          role="tab"
+          aria-selected="false"
+        >
+          진행 중
+        </button>
+        <button
+          class="filter-tab"
+          data-filter="done"
+          role="tab"
+          aria-selected="false"
+        >
+          완료
+        </button>
+      </nav>
+
       <!-- Todo 통계 -->
       <section class="stats-section" id="statsSection">
         <span id="totalCount" class="stat-item">전체 <strong>0</strong></span>
@@ -57,7 +85,7 @@
 
       <!-- 빈 상태 메시지 -->
       <div id="emptyState" class="empty-state">
-        <p>아직 할 일이 없어요</p>
+        <p id="emptyMessage">아직 할 일이 없어요</p>
         <p class="empty-hint">위 입력창에서 추가해보세요</p>
       </div>
     </div>

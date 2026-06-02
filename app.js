@@ -8,6 +8,9 @@ let todos = [];
 // 각 Todo를 고유하게 식별하기 위한 ID 카운터
 let nextId = 1;
 
+// 현재 선택된 필터 ('all' | 'active' | 'done')
+let currentFilter = "all";
+
 /* ===========================
    DOM 참조
 =========================== */
@@ -16,9 +19,11 @@ const addBtn = document.getElementById("addBtn");
 const todoList = document.getElementById("todoList");
 const errorMessage = document.getElementById("errorMessage");
 const emptyState = document.getElementById("emptyState");
+const emptyMessage = document.getElementById("emptyMessage");
 const totalCount = document.getElementById("totalCount");
 const doneCount = document.getElementById("doneCount");
 const remainCount = document.getElementById("remainCount");
+const filterTabs = document.querySelectorAll(".filter-tab");
 
 /* ===========================
    Todo 추가
@@ -151,6 +156,44 @@ function confirmEdit(id) {
 }
 
 /* ===========================
+   필터링
+=========================== */
+
+/**
+ * 현재 필터 기준으로 todos 배열을 필터링하여 반환한다.
+ * @returns {Array} 필터링된 Todo 배열
+ */
+function getFilteredTodos() {
+  if (currentFilter === "active") {
+    // 진행 중: 완료되지 않은 항목만
+    return todos.filter((todo) => !todo.isDone);
+  }
+  if (currentFilter === "done") {
+    // 완료: 완료된 항목만
+    return todos.filter((todo) => todo.isDone);
+  }
+  // 전체: 모든 항목
+  return todos;
+}
+
+/**
+ * 필터 탭을 클릭했을 때 currentFilter를 변경하고 탭 스타일을 갱신한다.
+ * @param {string} filter - 선택된 필터 값 ('all' | 'active' | 'done')
+ */
+function setFilter(filter) {
+  currentFilter = filter;
+
+  // 모든 탭에서 is-active 제거 후 선택된 탭에만 적용
+  filterTabs.forEach((tab) => {
+    const isSelected = tab.dataset.filter === filter;
+    tab.classList.toggle("is-active", isSelected);
+    tab.setAttribute("aria-selected", isSelected);
+  });
+
+  render();
+}
+
+/* ===========================
    에러 메시지 처리
 =========================== */
 
@@ -176,6 +219,7 @@ function clearError() {
 
 /**
  * 전체 / 완료 / 남은 할 일 수를 계산하여 UI에 반영한다.
+ * 통계는 필터와 무관하게 todos 전체 기준으로 계산한다.
  */
 function updateStats() {
   const total = todos.length;
@@ -185,6 +229,20 @@ function updateStats() {
   totalCount.innerHTML = `전체 <strong>${total}</strong>`;
   doneCount.innerHTML = `완료 <strong>${done}</strong>`;
   remainCount.innerHTML = `남은 일 <strong>${remain}</strong>`;
+}
+
+/* ===========================
+   빈 상태 메시지 처리
+=========================== */
+
+/**
+ * 현재 필터에 맞는 빈 상태 메시지를 반환한다.
+ * @returns {string} 빈 상태 안내 메시지
+ */
+function getEmptyMessage() {
+  if (currentFilter === "active") return "진행 중인 할 일이 없어요";
+  if (currentFilter === "done") return "완료된 할 일이 없어요";
+  return "아직 할 일이 없어요";
 }
 
 /* ===========================
@@ -255,23 +313,30 @@ function createTodoElement(todo) {
 =========================== */
 
 /**
- * todos 배열을 기반으로 화면 전체를 다시 그린다.
- * (빈 상태, 통계, 목록 모두 갱신)
+ * 현재 필터를 적용한 todos를 기반으로 화면 전체를 다시 그린다.
  */
 function render() {
   // 목록 초기화
   todoList.innerHTML = "";
 
-  // 빈 상태 표시 여부
-  emptyState.style.display = todos.length === 0 ? "block" : "none";
+  // 현재 필터 기준으로 표시할 항목 추출
+  const filteredTodos = getFilteredTodos();
 
-  // 각 Todo 아이템 렌더링
-  todos.forEach((todo) => {
+  // 빈 상태 표시 여부 (필터 기준으로 판단)
+  if (filteredTodos.length === 0) {
+    emptyState.style.display = "block";
+    emptyMessage.textContent = getEmptyMessage();
+  } else {
+    emptyState.style.display = "none";
+  }
+
+  // 필터링된 Todo 아이템 렌더링
+  filteredTodos.forEach((todo) => {
     const todoEl = createTodoElement(todo);
     todoList.appendChild(todoEl);
   });
 
-  // 통계 갱신
+  // 통계는 전체 todos 기준으로 갱신
   updateStats();
 }
 
@@ -290,6 +355,11 @@ todoInput.addEventListener("keydown", (e) => {
 // 입력 중 에러 상태 해제
 todoInput.addEventListener("input", () => {
   if (todoInput.value.trim()) clearError();
+});
+
+// 필터 탭 클릭
+filterTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setFilter(tab.dataset.filter));
 });
 
 /* ===========================
