@@ -393,6 +393,8 @@ function startEdit(id) {
   editBtn.textContent = "✓";
   editBtn.title = "수정 완료";
   editBtn.onclick = () => confirmEdit(id);
+  // 화살표 함수를 사용해서 이벤트 핸들러의 참조가 어려움
+  // editBtn.removeEventListener("click", );
 
   editInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") confirmEdit(id);
@@ -518,7 +520,8 @@ function createTodoElement(todo) {
   editBtn.textContent = "✎";
   editBtn.title = "수정";
   editBtn.setAttribute("aria-label", "수정");
-  editBtn.addEventListener("click", () => startEdit(todo.id));
+  editBtn.onclick = () => startEdit(todo.id);
+  // editBtn.addEventListener("click", () => startEdit(todo.id));
 
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "action-btn delete-btn";
