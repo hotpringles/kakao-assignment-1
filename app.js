@@ -79,6 +79,10 @@ const weekDaysEl = document.getElementById("weekDays");
  * @param {Date} date
  * @returns {string}
  */
+// toISOString()은 날짜를 UTC 기준으로 변환한 뒤 문자열 생성 -> 날짜 바뀔 수도 있음
+// function formatDateKey(date) {
+//   return date.toISOString().split('T')[0];
+// }
 function formatDateKey(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -152,7 +156,7 @@ function updateWeekView() {
   const weekDates = getWeekDates(monday);
   const sunday = weekDates[6];
 
-  // 주 범위 레이블: "2025. 6. 2 ~ 6. 8"
+  // 주 범위 레이블: "이번주 월요일 ~ 일요일"
   const startLabel = `${monday.getFullYear()}. ${monday.getMonth() + 1}. ${monday.getDate()}`;
   const endLabel = `${sunday.getMonth() + 1}. ${sunday.getDate()}`;
   weekRangeLabel.textContent = `${startLabel} ~ ${endLabel}`;
@@ -277,6 +281,11 @@ function goToNextDate() {
  * currentDate가 weekBaseDate 기준 주 밖에 있으면
  * weekBaseDate를 currentDate에 맞게 동기화한다.
  */
+/*
+  월요일을 기준으로 동기화를 하는 것이 일관되다고 생각했으나
+  굳이 getMonday 계산을 통해서 currentDate라는 원본 데이터를
+  두 번 계산해서 사용할 이유는 없어 currentDate로 바로 계산.
+*/
 function syncWeekBaseDateToCurrentDate() {
   const monday = getMonday(weekBaseDate);
   const weekDates = getWeekDates(monday);
@@ -300,9 +309,21 @@ function updateDateDisplay() {
 
 function addTodo() {
   const text = todoInput.value.trim();
+  const filteredTodos = getFilteredTodos();
 
-  if (!text) {
-    showError("할 일을 입력해주세요.");
+  // 중복처리 추가
+  // let flag = false;
+
+  // filteredTodos.forEach((todo) => {
+  //   if (todo.text === text) flag = true;
+  // });
+  // some, every, includes 함수 생각 못함..
+  let isDuplicate = filteredTodos.some((todo) => todo.text === text);
+  if (!text || isDuplicate) {
+    errorContent = isDuplicate
+      ? "할 일이 이미 존재합니다."
+      : "할 일을 입력해주세요.";
+    showError(errorContent);
     todoInput.classList.add("is-error");
     todoInput.focus();
     return;
@@ -459,8 +480,8 @@ function updateStats() {
 =========================== */
 
 function getEmptyMessage() {
-  if (currentFilter === "active") return "진행 중인 할 일이 없어요";
-  if (currentFilter === "done") return "완료된 할 일이 없어요";
+  if (currentFilter === "active") return "진행 중인 일이 없어요";
+  if (currentFilter === "done") return "완료된 일이 없어요";
   return "아직 할 일이 없어요";
 }
 
