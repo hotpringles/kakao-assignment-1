@@ -1,19 +1,33 @@
 import { useState, useRef, useEffect } from "react";
 
+function formatDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatDateDisplay(date) {
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`;
+}
+
+function isToday(date) {
+  return formatDateKey(date) === formatDateKey(new Date());
+}
+
 function App() {
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    const saved = localStorage.getItem("todos");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [inputText, setInputText] = useState("");
   const [editingId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
   const [currentFilter, setCurrentFilter] = useState("all");
-  const nextId = useRef(1);
-
-  useEffect(() => {
-    const savedTodos = localStorage.getItem("todos");
-    const savedNextId = localStorage.getItem("nextId");
-    if (savedTodos) setTodos(JSON.parse(savedTodos));
-    if (savedNextId) nextId.current = JSON.parse(savedNextId);
-  }, []);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const savedNextId = localStorage.getItem("nextId");
+  const nextId = useRef(savedNextId ? JSON.parse(savedNextId) : 1);
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
@@ -26,7 +40,7 @@ function App() {
       id: nextId.current++,
       text: text.trim(),
       isDone: false,
-      date: "...",
+      date: formatDateKey(currentDate),
     };
     setTodos((prev) => [...prev, newTodo]);
     setInputText("");
@@ -59,11 +73,29 @@ function App() {
     setEditId(null);
   }
 
-  const filteredTodos = todos.filter((todo) => {
-    if (currentFilter === "active") return !todo.isDone;
-    if (currentFilter === "done") return todo.isDone;
-    return true;
-  });
+  const filteredTodos = todos
+    .filter((todo) => todo.date === formatDateKey(currentDate))
+    .filter((todo) => {
+      if (currentFilter === "active") return !todo.isDone;
+      if (currentFilter === "done") return todo.isDone;
+      return true;
+    });
+
+  function goToPrevDate() {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 1);
+      return d;
+    });
+  }
+
+  function goToNextDate() {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 1);
+      return d;
+    });
+  }
 
   return (
     <div className="w-full max-w-[560px]">
@@ -93,90 +125,117 @@ function App() {
         </div>
       </section>
 
-      <nav className="flex gap-1 mb-4 bg-surface border-[1.5px] border-border rounded-xl p-1">
-        {["all", "active", "done"].map((filter) => (
+      <section>
+        <div className="flex items-center gap-1 mb-2">
           <button
-            key={filter}
-            className={`flex-1 h-[38px] rounded-lg text-[15px] cursor-pointer transition-all duration-[0.18s] ${
-              currentFilter === filter
-                ? "bg-primary text-white font-semibold"
-                : "bg-transparent text-muted hover:bg-primary-light hover:text-primary"
-            }`}
-            onClick={() => setCurrentFilter(filter)}
+            className="w-6 h-6 flex items-center justify-center text-[18px] text-muted rounded-lg hover:bg-[#e9e9e9] cursor-pointer transition-all duration-[0.18s]"
+            onClick={goToPrevDate}
           >
-            {filter === "all"
-              ? "전체"
-              : filter === "active"
-                ? "진행 중"
-                : "완료"}
+            ‹
           </button>
-        ))}
-      </nav>
-
-      <ul className="flex flex-col gap-2.5 list-none">
-        {filteredTodos.map((todo) => (
-          <li
-            key={todo.id}
-            className={`group flex items-center gap-3 px-4 py-[14px] border-[1.5px] rounded-[18px] shadow-[0_2px_12px_rgba(103,43,224,0.07)] animate-slide-in transition-all duration-[0.18s] ${
-              todo.isDone
-                ? "bg-done-bg border-border hover:border-border"
-                : "bg-surface border-border hover:border-primary hover:-translate-y-px"
-            }`}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[15px] font-semibold text-[#1a1523] tracking-[-0.3px]">
+              {formatDateDisplay(currentDate)}
+            </span>
+            {isToday(currentDate) && (
+              <span className="text-[11px] font-semibold px-1.5 py-px rounded-full bg-primary text-white">
+                오늘
+              </span>
+            )}
+          </div>
+          <button
+            className="w-6 h-6 flex items-center justify-center text-[18px] text-muted rounded-lg hover:bg-[#e9e9e9] cursor-pointer transition-all duration-[0.18s]"
+            onClick={goToNextDate}
           >
-            <input
-              type="checkbox"
-              className="todo-checkbox w-5 h-5 rounded-full cursor-pointer shrink-0 border-2 border-border checked:bg-primary checked:border-primary transition-all duration-[0.18s]"
-              checked={todo.isDone}
-              onChange={() => toggleDone(todo.id)}
-            />
-            <div className="flex-1 min-w-0">
-              {editingId === todo.id ? (
-                <input
-                  className="w-full border-b-[1.5px] border-primary bg-transparent text-[15px] text-[#1a1523] outline-none py-0.5"
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") confirmEdit(todo.id);
-                    if (e.key === "Escape") setEditId(null);
-                  }}
-                  autoFocus
-                />
-              ) : (
-                <span
-                  className={`text-[15px] leading-relaxed break-all transition-all duration-[0.18s] ${
-                    todo.isDone
-                      ? "line-through text-done-text"
-                      : "text-[#1a1523]"
-                  }`}
+            ›
+          </button>
+        </div>
+
+        <nav className="flex gap-1 mb-4 bg-surface border-[1.5px] border-border rounded-xl p-1">
+          {["all", "active", "done"].map((filter) => (
+            <button
+              key={filter}
+              className={`flex-1 h-[38px] rounded-lg text-[15px] cursor-pointer transition-all duration-[0.18s] ${
+                currentFilter === filter
+                  ? "bg-primary text-white font-semibold"
+                  : "bg-transparent text-muted hover:bg-primary-light hover:text-primary"
+              }`}
+              onClick={() => setCurrentFilter(filter)}
+            >
+              {filter === "all"
+                ? "전체"
+                : filter === "active"
+                  ? "진행 중"
+                  : "완료"}
+            </button>
+          ))}
+        </nav>
+
+        <ul className="flex flex-col gap-2.5 list-none">
+          {filteredTodos.map((todo) => (
+            <li
+              key={todo.id}
+              className={`group flex items-center gap-3 px-4 py-[14px] border-[1.5px] rounded-[18px] shadow-[0_2px_12px_rgba(103,43,224,0.07)] animate-slide-in transition-all duration-[0.18s] ${
+                todo.isDone
+                  ? "bg-done-bg border-border hover:border-border"
+                  : "bg-surface border-border hover:border-primary hover:-translate-y-px"
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="todo-checkbox w-5 h-5 rounded-full cursor-pointer shrink-0 border-2 border-border checked:bg-primary checked:border-primary transition-all duration-[0.18s]"
+                checked={todo.isDone}
+                onChange={() => toggleDone(todo.id)}
+              />
+              <div className="flex-1 min-w-0">
+                {editingId === todo.id ? (
+                  <input
+                    className="w-full border-b-[1.5px] border-primary bg-transparent text-[15px] text-[#1a1523] outline-none py-0.5"
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") confirmEdit(todo.id);
+                      if (e.key === "Escape") setEditId(null);
+                    }}
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className={`text-[15px] leading-relaxed break-all transition-all duration-[0.18s] ${
+                      todo.isDone
+                        ? "line-through text-done-text"
+                        : "text-[#1a1523]"
+                    }`}
+                  >
+                    {todo.text}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[0.18s]">
+                <button
+                  className="w-8 h-8 rounded-lg bg-transparent cursor-pointer text-[15px] flex items-center justify-center text-muted hover:bg-primary-light hover:text-primary transition-all duration-[0.18s]"
+                  onClick={
+                    editingId === todo.id
+                      ? () => confirmEdit(todo.id)
+                      : () => {
+                          setEditId(todo.id);
+                          setEditText(todo.text);
+                        }
+                  }
                 >
-                  {todo.text}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[0.18s]">
-              <button
-                className="w-8 h-8 rounded-lg bg-transparent cursor-pointer text-[15px] flex items-center justify-center text-muted hover:bg-primary-light hover:text-primary transition-all duration-[0.18s]"
-                onClick={
-                  editingId === todo.id
-                    ? () => confirmEdit(todo.id)
-                    : () => {
-                        setEditId(todo.id);
-                        setEditText(todo.text);
-                      }
-                }
-              >
-                {editingId === todo.id ? "✓" : "✎"}
-              </button>
-              <button
-                className="w-8 h-8 rounded-lg bg-transparent cursor-pointer text-[15px] flex items-center justify-center text-muted hover:bg-[#fde8e8] hover:text-error transition-all duration-[0.18s]"
-                onClick={() => deleteTodo(todo.id)}
-              >
-                ✕
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+                  {editingId === todo.id ? "✓" : "✎"}
+                </button>
+                <button
+                  className="w-8 h-8 rounded-lg bg-transparent cursor-pointer text-[15px] flex items-center justify-center text-muted hover:bg-[#fde8e8] hover:text-error transition-all duration-[0.18s]"
+                  onClick={() => deleteTodo(todo.id)}
+                >
+                  ✕
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
