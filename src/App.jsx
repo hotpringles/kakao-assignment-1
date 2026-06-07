@@ -5,6 +5,7 @@ function App() {
   const [inputText, setInputText] = useState("");
   const [editingId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
+  const [currentFilter, setCurrentFilter] = useState("all");
   const nextId = useRef(1);
 
   useEffect(() => {
@@ -58,6 +59,12 @@ function App() {
     setEditId(null);
   }
 
+  const filteredTodos = todos.filter((todo) => {
+    if (currentFilter === "active") return !todo.isDone;
+    if (currentFilter === "done") return todo.isDone;
+    return true;
+  });
+
   return (
     <div className="w-full max-w-[560px]">
       <header className="mb-6">
@@ -86,8 +93,28 @@ function App() {
         </div>
       </section>
 
+      <nav className="flex gap-1 mb-4 bg-surface border-[1.5px] border-border rounded-xl p-1">
+        {["all", "active", "done"].map((filter) => (
+          <button
+            key={filter}
+            className={`flex-1 h-[38px] rounded-lg text-[15px] cursor-pointer transition-all duration-[0.18s] ${
+              currentFilter === filter
+                ? "bg-primary text-white font-semibold"
+                : "bg-transparent text-muted hover:bg-primary-light hover:text-primary"
+            }`}
+            onClick={() => setCurrentFilter(filter)}
+          >
+            {filter === "all"
+              ? "전체"
+              : filter === "active"
+                ? "진행 중"
+                : "완료"}
+          </button>
+        ))}
+      </nav>
+
       <ul className="flex flex-col gap-2.5 list-none">
-        {todos.map((todo) => (
+        {filteredTodos.map((todo) => (
           <li
             key={todo.id}
             className={`group flex items-center gap-3 px-4 py-[14px] border-[1.5px] rounded-[18px] shadow-[0_2px_12px_rgba(103,43,224,0.07)] animate-slide-in transition-all duration-[0.18s] ${
@@ -117,7 +144,9 @@ function App() {
               ) : (
                 <span
                   className={`text-[15px] leading-relaxed break-all transition-all duration-[0.18s] ${
-                    todo.isDone ? "line-through text-done-text" : "text-[#1a1523]"
+                    todo.isDone
+                      ? "line-through text-done-text"
+                      : "text-[#1a1523]"
                   }`}
                 >
                   {todo.text}
@@ -130,7 +159,10 @@ function App() {
                 onClick={
                   editingId === todo.id
                     ? () => confirmEdit(todo.id)
-                    : () => { setEditId(todo.id); setEditText(todo.text); }
+                    : () => {
+                        setEditId(todo.id);
+                        setEditText(todo.text);
+                      }
                 }
               >
                 {editingId === todo.id ? "✓" : "✎"}
