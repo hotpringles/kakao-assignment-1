@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #672be0;
+  --color-primary-light: #ede6fb;
+  --color-primary-dark: #4e1faa;
+  --color-surface: #ffffff;
+  --color-muted: #7a6f8a;
+  --color-border: #e4ddf4;
+  --color-error: #d63b3b;
+  --color-done-text: #b0a8c4;
+  --color-done-bg: #f5f3fa;
+}
+
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  background: #f7f5fc;
+  color: #1a1523;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px 80px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease;
+}
+
+/* 유틸리티로 표현 불가능한 체크박스 커스텀 스타일 */
+.todo-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+}
+
+.todo-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 6px;
+  height: 10px;
+  border: 2px solid white;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 28px 12px 60px;
+  }
+}
