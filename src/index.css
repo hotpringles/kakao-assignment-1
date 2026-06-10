@@ -22,6 +22,10 @@ body {
   padding: 48px 16px 80px;
 }
 
+#root {
+  width: 100%;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
